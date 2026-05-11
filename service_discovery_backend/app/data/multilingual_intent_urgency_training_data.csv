@@ -1,0 +1,489 @@
+transcript,intent,urgency
+school pickup taxi,taxi,normal
+book police service Colombo tomorrow,police,normal
+harassment complaint,police,normal
+nal plumber venum near me,plumber,normal
+plumber emergency Colombo now,plumber,high
+fan not working electrician,electrician,normal
+water problem house,plumber,normal
+car battery dead,mechanic,normal
+bathroom issue plumber near me,plumber,normal
+cab ekak ikmanata one near me,taxi,high
+need hospital service in Kandy today,hospital,moderate
+need police service in Maharagama today,police,moderate
+room clean karanna,cleaning,normal
+taxi near me,taxi,normal
+deep cleaning service near me,cleaning,normal
+home cleaning tomorrow sri lanka,cleaning,normal
+electrician emergency Negombo now,electrician,high
+book fire service Jaffna tomorrow,fire,normal
+accident ikmanata hospital,hospital,high
+brake problem near me,mechanic,normal
+bike mechanic venum near me,mechanic,normal
+voltage issue help sri lanka,electrician,high
+ride needed now sri lanka,taxi,high
+book electrician service Jaffna tomorrow,electrician,normal
+light ekak hadanna,electrician,normal
+need cleaning service in Negombo today,cleaning,moderate
+thief came now sri lanka,police,high
+need fire service in Galle today,fire,moderate
+drainage blocked service near me,plumber,normal
+book plumber service Galle tomorrow,plumber,normal
+book mechanic service Negombo tomorrow,mechanic,normal
+electrician near me sri lanka,electrician,normal
+toilet block repair,plumber,normal
+doctor please fast,hospital,high
+vehicle to hospital near me,taxi,normal
+cleaning service one sri lanka,cleaning,normal
+thief catch help near me,police,high
+colombo yanna car,taxi,normal
+need hospital service in Negombo today,hospital,moderate
+need cleaning service in Colombo today,cleaning,moderate
+plumber emergency Jaffna now,plumber,high
+fire emergency Galle now,fire,high
+cleaner near me near me,cleaning,normal
+carpet cleaning near me,cleaning,normal
+bike mechanic venum,mechanic,normal
+gas leak fire brigade sri lanka,fire,normal
+security issue sri lanka,police,normal
+garage support now sri lanka,mechanic,high
+book mechanic service Maharagama tomorrow,mechanic,normal
+house clean karanna kenek,cleaning,normal
+cleaning service one,cleaning,normal
+cleaning emergency Jaffna now,cleaning,high
+hospital emergency Galle now,hospital,high
+switch board smoke,electrician,normal
+doctor kenek ikmanata one sri lanka,hospital,high
+need plumber service in Maharagama today,plumber,moderate
+threewheel repair sri lanka,mechanic,normal
+traffic police needed near me,police,normal
+pipe... leak... water... urgent,plumber,high
+book fire service Kandy tomorrow,fire,normal
+hire ekak call karanna,taxi,normal
+police emergency Colombo now,police,high
+cylinder leak urgent,fire,high
+cleaner near me sri lanka,cleaning,normal
+mechanic emergency Kandy now,mechanic,high
+nal plumber venum sri lanka,plumber,normal
+doctor please fast sri lanka,hospital,high
+book cleaning service Negombo tomorrow,cleaning,normal
+book mechanic service Kandy tomorrow,mechanic,normal
+threewheel repair,mechanic,normal
+car battery dead near me,mechanic,normal
+fan not working electrician near me,electrician,normal
+electrician emergency Kandy now,electrician,high
+house clean karanna kenek near me,cleaning,normal
+car breakdown mechanic one near me,mechanic,normal
+doctor kenek ikmanata one near me,hospital,high
+sink block wela near me,plumber,normal
+vehicle to hospital sri lanka,taxi,normal
+hospital yanna ona sri lanka,hospital,normal
+need electrician service in Maharagama today,electrician,moderate
+bike start wenne na,mechanic,normal
+fire service now near me,fire,high
+kitchen fire near me,fire,normal
+book taxi service Colombo tomorrow,taxi,normal
+robbery happening sri lanka,police,normal
+lost child police sri lanka,police,normal
+book hospital service Jaffna tomorrow,hospital,normal
+taxi near me sri lanka,taxi,normal
+wire sparking urgent,electrician,high
+sick person help near me,hospital,high
+electrician near me,electrician,normal
+thief catch help,police,high
+fire emergency Negombo now,fire,high
+hospital yanna ona near me,hospital,normal
+current... spark... danger,electrician,high
+book taxi service Negombo tomorrow,taxi,normal
+need electrician service in Galle today,electrician,moderate
+book electrician service Colombo tomorrow,electrician,normal
+traffic police needed,police,normal
+wire sparking urgent near me,electrician,high
+hospital yanna ona,hospital,normal
+fire emergency Kandy now,fire,high
+vehicle to hospital,taxi,normal
+light ekak hadanna near me,electrician,normal
+leak leak kitchen near me,plumber,normal
+cab... airport... now,taxi,high
+book hospital service Negombo tomorrow,hospital,normal
+nal plumber venum,plumber,normal
+fire emergency Maharagama now,fire,high
+taxi emergency Colombo now,taxi,high
+cleaning emergency Galle now,cleaning,high
+dangerous person near me,police,high
+book plumber service Colombo tomorrow,plumber,normal
+need mechanic service in Kandy today,mechanic,moderate
+police station number sri lanka,police,normal
+pipe leak wenawa plumber one near me,plumber,normal
+bathroom issue plumber,plumber,normal
+book cleaning service Maharagama tomorrow,cleaning,normal
+book cleaning service Colombo tomorrow,cleaning,normal
+book fire service Colombo tomorrow,fire,normal
+thief... police... help,police,high
+thief came now,police,high
+school pickup taxi sri lanka,taxi,normal
+harassment complaint near me,police,normal
+garden cleaning near me near me,cleaning,normal
+washroom cleaning near me,cleaning,normal
+car fire road near me,fire,normal
+mechanic emergency Jaffna now,mechanic,high
+vehicle stopped road side near me,mechanic,normal
+garage support now,mechanic,high
+fire brigade call,fire,normal
+electrician emergency Colombo now,electrician,high
+cylinder leak urgent near me,fire,high
+sick person help sri lanka,hospital,high
+power cut in house near me,electrician,normal
+wire sparking urgent sri lanka,electrician,high
+medicine ganna place langama sri lanka,hospital,normal
+pipe leak wenawa plumber one sri lanka,plumber,normal
+nearby clinic emergency sri lanka,hospital,high
+airport yanna cab sri lanka,taxi,normal
+bathroom issue plumber sri lanka,plumber,normal
+podi accident hospital near me,hospital,normal
+office cleaning needed near me,cleaning,normal
+emergency police please near me,police,high
+cab ekak ikmanata one sri lanka,taxi,high
+need plumber service in Colombo today,plumber,moderate
+maruthuvamanai venum urgent near me,hospital,high
+mechanic emergency Negombo now,mechanic,high
+water line burst urgent sri lanka,plumber,high
+thief catch help sri lanka,police,high
+current na electrician one sri lanka,electrician,normal
+plumber ayya urgent,plumber,high
+plumber near me sri lanka,plumber,normal
+fire brigade call near me,fire,normal
+security issue near me,police,normal
+book police service Maharagama tomorrow,police,normal
+doctor please fast near me,hospital,high
+book plumber service Maharagama tomorrow,plumber,normal
+mains trip karanawa near me,electrician,normal
+kitchen fire,fire,normal
+maruthuvamanai venum urgent sri lanka,hospital,high
+hospital emergency Kandy now,hospital,high
+water problem house near me,plumber,normal
+factory fire help near me,fire,high
+van needed family sri lanka,taxi,normal
+need cleaning service in Galle today,cleaning,moderate
+house burning sri lanka,fire,normal
+police station number near me,police,normal
+fire fire help sri lanka,fire,high
+accident police report sri lanka,police,normal
+ambulance needed now sri lanka,hospital,high
+book cleaning service Galle tomorrow,cleaning,normal
+after party clean sri lanka,cleaning,normal
+room clean karanna near me,cleaning,normal
+car... road... stopped,mechanic,moderate
+police help urgent near me,police,high
+emergency police please sri lanka,police,high
+need fire service in Jaffna today,fire,moderate
+need mechanic service in Colombo today,mechanic,moderate
+cab venum fast near me,taxi,high
+electrical fire urgent sri lanka,fire,high
+police emergency Kandy now,police,high
+electrician emergency Jaffna now,electrician,high
+smoke coming kitchen sri lanka,fire,normal
+engine issue urgent sri lanka,mechanic,high
+threewheel repair near me,mechanic,normal
+bike start wenne na sri lanka,mechanic,normal
+book plumber service Jaffna tomorrow,plumber,normal
+plumber emergency Negombo now,plumber,high
+taxi emergency Galle now,taxi,high
+vehicle stopped road side,mechanic,normal
+wire problem near me,electrician,normal
+plug point repair sri lanka,electrician,normal
+need plumber service in Galle today,plumber,moderate
+need fire service in Maharagama today,fire,moderate
+car fire road sri lanka,fire,normal
+police emergency Jaffna now,police,high
+book taxi service Kandy tomorrow,taxi,normal
+maid service request,cleaning,normal
+electrical fire urgent near me,fire,high
+electric shock danger sri lanka,electrician,high
+need mechanic service in Galle today,mechanic,moderate
+fire service now sri lanka,fire,high
+injury help hospital near me,hospital,high
+home cleaning tomorrow near me,cleaning,normal
+window cleaning near me,cleaning,normal
+hospital emergency Colombo now,hospital,high
+uber wage taxi near me,taxi,normal
+garden cleaning near me,cleaning,normal
+lost child police near me,police,normal
+electric repair urgent,electrician,high
+book hospital service Galle tomorrow,hospital,normal
+maruthuvamanai venum urgent,hospital,high
+light trip wenawa near me,electrician,normal
+vehicle smoke coming sri lanka,mechanic,normal
+police help urgent sri lanka,police,high
+mains trip karanawa,electrician,normal
+book plumber service Kandy tomorrow,plumber,normal
+current na electrician one near me,electrician,normal
+electrician emergency Galle now,electrician,high
+tap kadila repair karanna near me,plumber,normal
+cleaning emergency Kandy now,cleaning,high
+accident police report near me,police,normal
+burning smell danger near me,fire,high
+book taxi service Maharagama tomorrow,taxi,normal
+need cleaning service in Maharagama today,cleaning,moderate
+nearby clinic emergency,hospital,high
+factory fire help,fire,high
+fire service now,fire,high
+smoke coming kitchen,fire,normal
+office cleaning needed,cleaning,normal
+police emergency Maharagama now,police,high
+car key stuck near me,mechanic,normal
+ambulance needed now,hospital,high
+taxi emergency Maharagama now,taxi,high
+police help urgent,police,high
+factory fire help sri lanka,fire,high
+hospital ekak near me urgent,hospital,high
+brake problem,mechanic,normal
+need police service in Jaffna today,police,moderate
+need taxi service in Maharagama today,taxi,moderate
+mechanic near me sri lanka,mechanic,normal
+plumber emergency Galle now,plumber,high
+cleaning emergency Maharagama now,cleaning,high
+fire emergency Jaffna now,fire,high
+voltage issue help,electrician,high
+book plumber service Negombo tomorrow,plumber,normal
+washroom cleaning,cleaning,normal
+switch board smoke sri lanka,electrician,normal
+fire emergency Colombo now,fire,high
+pipe ekak pupurala,plumber,normal
+taxi emergency Negombo now,taxi,high
+electrician near me near me,electrician,normal
+water line burst urgent,plumber,high
+book hospital service Maharagama tomorrow,hospital,normal
+mechanic emergency Colombo now,mechanic,high
+bathroom water leak ikmanata near me,plumber,high
+book mechanic service Colombo tomorrow,mechanic,normal
+plumber ayya urgent sri lanka,plumber,high
+book fire service Maharagama tomorrow,fire,normal
+clean... house... tomorrow,cleaning,normal
+cab ekak ikmanata one,taxi,high
+need electrician service in Jaffna today,electrician,moderate
+water line burst urgent near me,plumber,high
+need taxi service in Galle today,taxi,moderate
+book police service Negombo tomorrow,police,normal
+book hospital service Kandy tomorrow,hospital,normal
+amma asaneepa hospital now sri lanka,hospital,high
+kitchen fire sri lanka,fire,normal
+tyre puncture help near me,mechanic,high
+train station yanna near me,taxi,normal
+need fire service in Kandy today,fire,moderate
+need mechanic service in Jaffna today,mechanic,moderate
+building smoke sri lanka,fire,normal
+wire problem,electrician,normal
+sweep mop service near me,cleaning,normal
+maid service request sri lanka,cleaning,normal
+sick person help,hospital,high
+toilet block repair near me,plumber,normal
+tap kadila repair karanna,plumber,normal
+need plumber service in Jaffna today,plumber,moderate
+engine issue urgent near me,mechanic,high
+cleaning emergency Negombo now,cleaning,high
+wire problem sri lanka,electrician,normal
+car fire road,fire,normal
+drop one now,taxi,high
+dangerous person,police,high
+electric repair urgent sri lanka,electrician,high
+ride needed now,taxi,high
+deep cleaning service,cleaning,normal
+window cleaning,cleaning,normal
+car breakdown mechanic one sri lanka,mechanic,normal
+need mechanic service in Negombo today,mechanic,moderate
+podi accident hospital sri lanka,hospital,normal
+flame in shop,fire,normal
+mechanic near me near me,mechanic,normal
+nearby clinic emergency near me,hospital,high
+medicine ganna place langama near me,hospital,normal
+need taxi service in Jaffna today,taxi,moderate
+need electrician service in Negombo today,electrician,moderate
+need plumber service in Negombo today,plumber,moderate
+car key stuck sri lanka,mechanic,normal
+smoke coming kitchen near me,fire,normal
+need police service in Negombo today,police,moderate
+need hospital service in Jaffna today,hospital,moderate
+accident vehicle repair near me,mechanic,normal
+book hospital service Colombo tomorrow,hospital,normal
+violence near me sri lanka,police,normal
+hospital emergency Maharagama now,hospital,high
+deep cleaning service sri lanka,cleaning,normal
+cab venum fast sri lanka,taxi,high
+hospital ekak near me urgent sri lanka,hospital,high
+need taxi service in Colombo today,taxi,moderate
+accident... hospital... ikmanata,hospital,high
+van needed family near me,taxi,normal
+colombo yanna car near me,taxi,normal
+need plumber service in Kandy today,plumber,moderate
+hospital ekak near me urgent near me,hospital,high
+robbery happening near me,police,normal
+fight outside house near me,police,normal
+book taxi service Jaffna tomorrow,taxi,normal
+need police service in Galle today,police,moderate
+vehicle smoke coming,mechanic,normal
+cylinder leak urgent sri lanka,fire,high
+drop one now near me,taxi,high
+flame in shop sri lanka,fire,normal
+building smoke,fire,normal
+podi accident hospital,hospital,normal
+power cut in house sri lanka,electrician,normal
+plumber emergency Kandy now,plumber,high
+drop one now sri lanka,taxi,high
+need taxi service in Kandy today,taxi,moderate
+police emergency Negombo now,police,high
+taxi urgent near me,taxi,high
+electric shock danger,electrician,high
+drainage blocked service,plumber,normal
+electric shock danger near me,electrician,high
+gas leak fire brigade near me,fire,normal
+fever high doctor urgent sri lanka,hospital,high
+maid service request near me,cleaning,normal
+need hospital service in Colombo today,hospital,moderate
+accident police report,police,normal
+book electrician service Kandy tomorrow,electrician,normal
+pipe ekak pupurala sri lanka,plumber,normal
+colombo yanna car sri lanka,taxi,normal
+fever high doctor urgent,hospital,high
+sink block wela,plumber,normal
+electrical fire urgent,fire,high
+plug point repair near me,electrician,normal
+injury help hospital,hospital,high
+after party clean,cleaning,normal
+current na electrician one,electrician,normal
+fight outside house sri lanka,police,normal
+bathroom water leak ikmanata sri lanka,plumber,high
+fire fire help near me,fire,high
+book police service Galle tomorrow,police,normal
+after party clean near me,cleaning,normal
+need police service in Colombo today,police,moderate
+carpet cleaning sri lanka,cleaning,normal
+need electrician service in Kandy today,electrician,moderate
+train station yanna,taxi,normal
+cab venum fast,taxi,high
+power cut in house,electrician,normal
+amma asaneepa hospital now near me,hospital,high
+accident ikmanata hospital near me,hospital,high
+house clean karanna kenek sri lanka,cleaning,normal
+police emergency Galle now,police,high
+train station yanna sri lanka,taxi,normal
+electrician emergency Maharagama now,electrician,high
+bike start wenne na near me,mechanic,normal
+plumber ayya urgent near me,plumber,high
+drainage blocked service sri lanka,plumber,normal
+book mechanic service Jaffna tomorrow,mechanic,normal
+book police service Jaffna tomorrow,police,normal
+amma asaneepa hospital now,hospital,high
+book electrician service Galle tomorrow,electrician,normal
+security issue,police,normal
+pipe ekak pupurala near me,plumber,normal
+sink block wela sri lanka,plumber,normal
+mechanic emergency Maharagama now,mechanic,high
+electric repair urgent near me,electrician,high
+cleaning emergency Colombo now,cleaning,high
+engine issue urgent,mechanic,high
+taxi emergency Jaffna now,taxi,high
+brake problem sri lanka,mechanic,normal
+office cleaning needed sri lanka,cleaning,normal
+taxi urgent,taxi,high
+violence near me near me,police,normal
+toilet block repair sri lanka,plumber,normal
+switch board smoke near me,electrician,normal
+emergency police please,police,high
+leak leak kitchen sri lanka,plumber,normal
+accident vehicle repair sri lanka,mechanic,normal
+book fire service Galle tomorrow,fire,normal
+plumber near me near me,plumber,normal
+tap kadila repair karanna sri lanka,plumber,normal
+mains trip karanawa sri lanka,electrician,normal
+home cleaning tomorrow,cleaning,normal
+light trip wenawa,electrician,normal
+uber wage taxi sri lanka,taxi,normal
+taxi near me near me,taxi,normal
+hire ekak call karanna sri lanka,taxi,normal
+house burning,fire,normal
+doctor kenek ikmanata one,hospital,high
+garden cleaning near me sri lanka,cleaning,normal
+gas leak fire brigade,fire,normal
+light trip wenawa sri lanka,electrician,normal
+tyre puncture help sri lanka,mechanic,high
+fire fire help,fire,high
+airport yanna cab,taxi,normal
+book fire service Negombo tomorrow,fire,normal
+fire brigade call sri lanka,fire,normal
+accident ikmanata hospital sri lanka,hospital,high
+vehicle smoke coming near me,mechanic,normal
+water problem house sri lanka,plumber,normal
+plumber near me,plumber,normal
+need cleaning service in Jaffna today,cleaning,moderate
+need fire service in Negombo today,fire,moderate
+cleaner near me,cleaning,normal
+need hospital service in Maharagama today,hospital,moderate
+hospital emergency Jaffna now,hospital,high
+harassment complaint sri lanka,police,normal
+need fire service in Colombo today,fire,moderate
+bathroom water leak ikmanata,plumber,high
+mechanic emergency Galle now,mechanic,high
+building smoke near me,fire,normal
+burning smell danger,fire,high
+bike mechanic venum sri lanka,mechanic,normal
+need taxi service in Negombo today,taxi,moderate
+car key stuck,mechanic,normal
+hospital emergency Negombo now,hospital,high
+plug point repair,electrician,normal
+need electrician service in Colombo today,electrician,moderate
+traffic police needed sri lanka,police,normal
+police station number,police,normal
+taxi urgent sri lanka,taxi,high
+airport yanna cab near me,taxi,normal
+mechanic near me,mechanic,normal
+need mechanic service in Maharagama today,mechanic,moderate
+book cleaning service Jaffna tomorrow,cleaning,normal
+car breakdown mechanic one,mechanic,normal
+injury help hospital sri lanka,hospital,high
+robbery happening,police,normal
+light ekak hadanna sri lanka,electrician,normal
+flame in shop near me,fire,normal
+washroom cleaning sri lanka,cleaning,normal
+vehicle stopped road side sri lanka,mechanic,normal
+ambulance needed now near me,hospital,high
+accident vehicle repair,mechanic,normal
+violence near me,police,normal
+book police service Kandy tomorrow,police,normal
+pipe leak wenawa plumber one,plumber,normal
+fever high doctor urgent near me,hospital,high
+room clean karanna sri lanka,cleaning,normal
+book cleaning service Kandy tomorrow,cleaning,normal
+need hospital service in Galle today,hospital,moderate
+book taxi service Galle tomorrow,taxi,normal
+tyre puncture help,mechanic,high
+burning smell danger sri lanka,fire,high
+fire... smoke... kitchen,fire,high
+carpet cleaning,cleaning,normal
+ride needed now near me,taxi,high
+voltage issue help near me,electrician,high
+dangerous person sri lanka,police,high
+window cleaning sri lanka,cleaning,normal
+sweep mop service sri lanka,cleaning,normal
+book electrician service Maharagama tomorrow,electrician,normal
+garage support now near me,mechanic,high
+fan not working electrician sri lanka,electrician,normal
+leak leak kitchen,plumber,normal
+school pickup taxi near me,taxi,normal
+van needed family,taxi,normal
+book mechanic service Galle tomorrow,mechanic,normal
+medicine ganna place langama,hospital,normal
+uber wage taxi,taxi,normal
+cleaning service one near me,cleaning,normal
+book electrician service Negombo tomorrow,electrician,normal
+sweep mop service,cleaning,normal
+plumber emergency Maharagama now,plumber,high
+need cleaning service in Kandy today,cleaning,moderate
+fight outside house,police,normal
+need police service in Kandy today,police,moderate
+hire ekak call karanna near me,taxi,normal
+taxi emergency Kandy now,taxi,high
+thief came now near me,police,high
+lost child police,police,normal
+house burning near me,fire,normal
+car battery dead sri lanka,mechanic,normal
