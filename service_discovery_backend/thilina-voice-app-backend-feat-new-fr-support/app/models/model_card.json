@@ -1,0 +1,76 @@
+{
+  "trained_at": "2026-08-29T20:25:28.050972+00:00",
+  "embedder": "all-MiniLM-L6-v2",
+  "rows": 3069,
+  "label_counts": {
+    "intent": {
+      "request_service": 1397,
+      "report_issue": 1336,
+      "emergency_request": 336
+    },
+    "service_type": {
+      "ambulance_service": 252,
+      "hospital_service": 252,
+      "nursing_assistance": 251,
+      "battery_jump_start_service": 102,
+      "cleaning_service": 101,
+      "locksmith": 101,
+      "gardner": 101,
+      "cctv_installer": 101,
+      "computer_repair_service": 101,
+      "water_pump_repair_service": 101,
+      "solar_technician": 101,
+      "tv_repair": 101,
+      "mobile_phone_repair": 101,
+      "car_care": 101,
+      "laptop_repair": 101,
+      "network_operator": 101,
+      "plumber": 100,
+      "electrician": 100,
+      "carpenter": 100,
+      "mason": 100,
+      "mechanic": 100,
+      "air_condition_technician": 100,
+      "painter": 100,
+      "pest_controller": 100,
+      "appliance_repair_service": 100,
+      "movers": 100
+    },
+    "urgency_level": {
+      "medium": 1378,
+      "high": 1154,
+      "low": 537
+    }
+  },
+  "urgency_calibrated": true,
+  "urgency_trained_on": "single transcript (per-message, not per-case)",
+  "note": "This run reshipped only urgency_classifier_lr.joblib (calibrated). intent/service artifacts were left as previously trained; rerun train_pipeline.py to reship all heads.",
+  "metrics": {
+    "intent": {
+      "macro_f1": 0.9277615989312382
+    },
+    "service": {
+      "macro_f1": 0.9155946255406051
+    },
+    "urgency": {
+      "macro_f1": 0.6606460096915882,
+      "per_class": {
+        "high": {
+          "precision": 0.7522522522522522,
+          "recall": 0.7229437229437229,
+          "f1": 0.7373068432671082
+        },
+        "low": {
+          "precision": 0.684931506849315,
+          "recall": 0.4672897196261682,
+          "f1": 0.5555555555555556
+        },
+        "medium": {
+          "precision": 0.6426332288401254,
+          "recall": 0.7427536231884058,
+          "f1": 0.6890756302521008
+        }
+      }
+    }
+  }
+}
