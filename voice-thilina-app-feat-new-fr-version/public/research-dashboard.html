@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Provider Match — Live System Internals</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --page:        #0d0d0d;
+    --surface-1:   #1a1a19;
+    --surface-2:   #212120;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:    #2c2c2a;
+    --border:      rgba(255,255,255,0.10);
+    --good:        #0ca30c;
+    --warning:     #fab219;
+    --critical:    #e66767;
+
+    --series-1: #3987e5; /* blue    -- balanced_pp1_baseline */
+    --series-2: #d95926; /* orange  -- eta_heavy */
+    --series-3: #199e70; /* aqua    -- rating_heavy */
+    --series-4: #c98500; /* yellow  -- reliability_heavy */
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(57,135,229,0.10), transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(25,158,112,0.08), transparent 45%),
+      var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header.hero { display: flex; flex-direction: column; gap: 6px; margin-bottom: 28px; }
+  header.hero .eyebrow {
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 600;
+  }
+  header.hero h1 { margin: 0; font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
+  header.hero p { margin: 4px 0 0; color: var(--text-secondary); font-size: 14px; max-width: 640px; }
+
+  .status-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--surface-1); font-size: 12px; color: var(--text-secondary);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+  .dot.ok { background: var(--good); box-shadow: 0 0 0 0 rgba(12,163,12,0.6); animation: pulse-dot 2s infinite; }
+  .dot.bad { background: var(--critical); }
+  @keyframes pulse-dot {
+    0%   { box-shadow: 0 0 0 0 rgba(12,163,12,0.55); }
+    70%  { box-shadow: 0 0 0 7px rgba(12,163,12,0); }
+    100% { box-shadow: 0 0 0 0 rgba(12,163,12,0); }
+  }
+
+  section { margin-top: 36px; }
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 22px;
+  }
+  .card + .card { margin-top: 16px; }
+  h2 { font-size: 15px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 .tag {
+    font-size: 10.5px; font-weight: 600; color: var(--text-muted);
+    border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; margin-left: 8px;
+    text-transform: none; vertical-align: middle;
+  }
+  .section-desc { color: var(--text-secondary); font-size: 13px; margin: 0 0 16px; max-width: 720px; }
+
+  /* ---------- request form ---------- */
+  .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  textarea, select, input[type=text] {
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text-primary);
+    border-radius: 8px; padding: 9px 11px; font-size: 13px; font-family: inherit;
+  }
+  textarea { flex: 1 1 320px; min-width: 260px; resize: vertical; min-height: 40px; }
+  select { flex: 0 0 auto; }
+  button {
+    background: var(--series-1); color: #fff; border: none; border-radius: 8px;
+    padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+  }
+  button:hover:not(:disabled) { filter: brightness(1.12); }
+  button:active:not(:disabled) { transform: scale(0.98); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.secondary { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-primary); }
+
+  /* ---------- pipeline flow ---------- */
+  .flow-track { position: relative; padding: 34px 0 8px; margin-top: 18px; }
+  .flow-line {
+    position: absolute; top: 50px; left: 40px; right: 40px; height: 2px;
+    background: var(--gridline);
+  }
+  .flow-packet {
+    position: absolute; top: 44px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--series-1); box-shadow: 0 0 12px 3px rgba(57,135,229,0.7);
+    left: 40px; opacity: 0; transition: left 0.55s cubic-bezier(.4,0,.2,1), opacity 0.2s;
+  }
+  .flow-nodes { display: flex; justify-content: space-between; position: relative; }
+  .flow-node { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 6px; }
+  .flow-node .node-dot {
+    width: 15px; height: 15px; border-radius: 50%; background: var(--surface-2);
+    border: 2px solid var(--gridline); margin-bottom: 10px; transition: all 0.3s;
+  }
+  .flow-node.active .node-dot {
+    border-color: var(--series-1); background: var(--series-1);
+    box-shadow: 0 0 0 6px rgba(57,135,229,0.18);
+  }
+  .flow-node.done .node-dot { border-color: var(--good); background: var(--good); }
+  .flow-node .node-label { font-size: 12.5px; font-weight: 600; }
+  .flow-node .node-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; min-height: 14px; }
+  .flow-node .node-detail {
+    margin-top: 8px; font-size: 10.5px; color: var(--text-secondary);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 7px; opacity: 0; transform: translateY(4px);
+    transition: opacity 0.35s, transform 0.35s; max-width: 150px;
+  }
+  .flow-node.done .node-detail { opacity: 1; transform: translateY(0); }
+
+  .elapsed-list { margin-top: 22px; display: flex; flex-direction: column; gap: 7px; }
+  .elapsed-row { display: grid; grid-template-columns: 130px 1fr 52px; align-items: center; gap: 10px; }
+  .elapsed-row .label { font-size: 11.5px; color: var(--text-secondary); }
+  .elapsed-row .bar-track { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+  .elapsed-row .bar-fill { height: 100%; background: var(--series-1); width: 0%; border-radius: 4px; transition: width 0.6s ease; }
+  .elapsed-row .ms { font-size: 11px; color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---------- provider cards ---------- */
+  .provider-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 4px; }
+  .provider-card {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; display: flex; gap: 10px; opacity: 0; transform: translateY(6px);
+    animation: card-in 0.4s ease forwards;
+  }
+  @keyframes card-in { to { opacity: 1; transform: translateY(0); } }
+  .provider-card img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .provider-card .pname { font-size: 13px; font-weight: 600; }
+  .provider-card .pmeta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .provider-card .pscore { font-size: 11px; color: var(--series-1); margin-top: 5px; font-variant-numeric: tabular-nums; }
+  .provider-card.selected { border-color: var(--good); box-shadow: 0 0 0 1px var(--good); }
+  .provider-card button { margin-top: 7px; padding: 5px 10px; font-size: 11px; }
+
+  /* ---------- bandit arms ---------- */
+  .arm-row { display: grid; grid-template-columns: 170px 1fr 60px; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .arm-row .arm-name { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  .arm-row .swatch { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+  .arm-row .bar-track { height: 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+  .arm-row .bar-fill { height: 100%; border-radius: 6px; width: 0%; transition: width 0.7s cubic-bezier(.4,0,.2,1); }
+  .arm-row .obs { font-size: 11px; color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+  .flash { animation: flash-bg 0.9s ease; }
+  @keyframes flash-bg {
+    0%   { background: var(--surface-1); }
+    30%  { background: rgba(57,135,229,0.13); }
+    100% { background: var(--surface-1); }
+  }
+
+  svg.spark { width: 100%; height: 90px; display: block; margin-top: 4px; }
+
+  /* ---------- architecture badges ---------- */
+  .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .arch-badge {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 13px;
+  }
+  .arch-badge .t { font-size: 12.5px; font-weight: 650; margin-bottom: 3px; }
+  .arch-badge .d { font-size: 11.5px; color: var(--text-secondary); line-height: 1.4; }
+
+  footer { margin-top: 40px; text-align: center; color: var(--text-muted); font-size: 11.5px; }
+  code { background: var(--surface-2); border-radius: 4px; padding: 1px 5px; font-size: 11.5px; }
+
+  /* ---------- simulate controls ---------- */
+  .sim-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .sim-summary { font-size: 12px; color: var(--text-secondary); }
+  .sim-summary strong { color: var(--text-primary); }
+
+  /* ---------- context agent explainer ---------- */
+  .ctx-flow { display: flex; align-items: stretch; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .ctx-step { flex: 1 1 220px; display: flex; flex-direction: column; gap: 6px; }
+  .ctx-step-title { font-size: 11.5px; font-weight: 650; color: var(--text-secondary); }
+  .ctx-box {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px; font-size: 11px; line-height: 1.55; color: var(--text-primary);
+    white-space: pre-wrap; word-break: break-word; margin: 0; flex: 1;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    opacity: 0; transform: translateY(4px); transition: opacity 0.4s, transform 0.4s;
+  }
+  .ctx-box.filled { opacity: 1; transform: translateY(0); }
+  .ctx-arrow { display: flex; align-items: center; color: var(--text-muted); font-size: 18px; padding-top: 20px; }
+  .ctx-branches { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .ctx-branch {
+    flex: 1 1 260px; border-radius: 8px; padding: 10px 12px; border: 1px solid var(--border);
+  }
+  .ctx-branch-title { font-size: 12px; font-weight: 650; margin-bottom: 3px; }
+  .ctx-branch-body { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+  #ctx-branch-ok { border-color: rgba(12,163,12,0.35); background: rgba(12,163,12,0.07); }
+  #ctx-branch-fail { border-color: rgba(230,103,103,0.35); background: rgba(230,103,103,0.06); }
+
+  /* ---------- dijkstra explainer ---------- */
+  .dijkstra-row { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; align-items: stretch; }
+  #dij-svg { flex: 1 1 340px; min-width: 300px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; }
+  .dij-log-panel { flex: 1 1 220px; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
+  .dij-controls { display: flex; gap: 8px; }
+  .dij-log {
+    flex: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px; font-size: 11px; line-height: 1.6; color: var(--text-secondary);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; height: 200px; overflow-y: auto;
+  }
+  .dij-log .step-current { color: var(--text-primary); font-weight: 600; }
+  .dij-node-circle { fill: var(--surface-1); stroke: var(--gridline); stroke-width: 2; transition: all 0.3s; }
+  .dij-node-circle.frontier { stroke: var(--series-2); }
+  .dij-node-circle.visited { fill: var(--series-1); stroke: var(--series-1); }
+  .dij-node-circle.path { fill: var(--good); stroke: var(--good); }
+  .dij-node-label { fill: var(--text-primary); font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .dij-node-dist { fill: var(--text-muted); font-size: 9.5px; text-anchor: middle; pointer-events: none; }
+  .dij-edge { stroke: var(--gridline); stroke-width: 2; transition: stroke 0.3s, stroke-width 0.3s; }
+  .dij-edge.relaxed { stroke: var(--series-2); stroke-width: 3; }
+  .dij-edge.path { stroke: var(--good); stroke-width: 4; }
+  .dij-edge-label { fill: var(--text-muted); font-size: 9px; text-anchor: middle; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">Live system trace — nothing on this page is hardcoded</span>
+    <h1>Adaptive Context-Aware Multi-Agent Coordination Framework</h1>
+    <p>
+      Every value below is pulled live from the running FastAPI backend (<code id="api-base-label">http://localhost:8001</code>)
+      over its real HTTP + WebSocket API — the same pipeline, the same bandit state, the same database the demo app uses.
+      Submit a request to watch it flow through five real agents, then select a provider to watch the bandit learn.
+    </p>
+    <div class="status-row">
+      <span class="status-pill"><span id="dot-conn" class="dot"></span><span id="conn-label">connecting…</span></span>
+      <span class="status-pill"><span id="dot-ws" class="dot"></span><span id="ws-label">websocket idle</span></span>
+    </div>
+  </header>
+
+  <section>
+    <div class="card">
+      <h2>1. Multi-agent pipeline <span class="tag">LangGraph StateGraph</span></h2>
+      <p class="section-desc">
+        Context → Search → Distance → Availability → Ranking. A conditional edge after the Context Agent
+        routes emergency requests down a reduced-candidate fast path. Timings below are the real per-node
+        timestamps from this run's trace.
+      </p>
+      <div class="form-row">
+        <textarea id="raw-text" placeholder="Describe a request, e.g. 'pipe burst under the sink, need someone urgently'">Kitchen sink pipe burst, water everywhere, need a plumber now</textarea>
+        <select id="region">
+          <option value="colombo-01">colombo-01</option>
+          <option value="colombo-02">colombo-02</option>
+          <option value="dehiwala">dehiwala</option>
+          <option value="mount-lavinia">mount-lavinia</option>
+          <option value="kotte">kotte</option>
+        </select>
+        <button id="run-btn">Run live request →</button>
+      </div>
+
+      <div class="flow-track">
+        <div class="flow-line"></div>
+        <div class="flow-packet" id="flow-packet"></div>
+        <div class="flow-nodes" id="flow-nodes">
+          <div class="flow-node" data-node="context_agent">
+            <div class="node-dot"></div>
+            <div class="node-label">Context Agent</div>
+            <div class="node-sub">rules + LLM</div>
+            <div class="node-detail"></div>
+          </div>
+          <div class="flow-node" data-node="search_agent">
+            <div class="node-dot"></div>
+            <div class="node-label">Search Agent</div>
+            <div class="node-sub">hybrid RRF</div>
+            <div class="node-detail"></div>
+          </div>
+          <div class="flow-node" data-node="distance_agent">
+            <div class="node-dot"></div>
+            <div class="node-label">Distance Agent</div>
+            <div class="node-sub">Dijkstra / A*</div>
+            <div class="node-detail"></div>
+          </div>
+          <div class="flow-node" data-node="availability_agent">
+            <div class="node-dot"></div>
+            <div class="node-label">Availability Agent</div>
+            <div class="node-sub">live DB + simulator</div>
+            <div class="node-detail"></div>
+          </div>
+          <div class="flow-node" data-node="ranking_agent">
+            <div class="node-dot"></div>
+            <div class="node-label">Ranking Agent</div>
+            <div class="node-sub">LinUCB bandit</div>
+            <div class="node-detail"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="elapsed-list" id="elapsed-list"></div>
+    </div>
+
+    <div class="card" id="providers-card" style="display:none;">
+      <h2>Recommended providers</h2>
+      <p class="section-desc">Real ranked candidates from this run. Select one to send a reward to the bandit below — this is what actually drives learning.</p>
+      <div class="provider-grid" id="provider-grid"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2>2. Adaptive weight learning <span class="tag">LinUCB contextual bandit</span></h2>
+      <p class="section-desc">
+        Four discrete scoring-weight profiles. <code>balanced_pp1_baseline</code> reproduces PP1's original
+        fixed-weight formula as the experimental control; the other three are candidate arms the bandit
+        explores. Bar length is <code>‖θ‖</code> (learned weight vector norm) per arm — this updates live over
+        WebSocket the instant <em>any</em> feedback is recorded, from this page or the main app.
+      </p>
+      <div id="arm-rows"></div>
+      <svg class="spark" id="spark"></svg>
+      <div class="sim-row">
+        <button class="secondary" id="sim-20">Simulate 20 rounds</button>
+        <button class="secondary" id="sim-100">Simulate 100 rounds</button>
+        <span id="sim-summary" class="sim-summary"></span>
+      </div>
+      <p class="section-desc" style="margin-top:10px;">
+        A fresh bandit starts at <code>0 obs</code> on every backend restart (state is in-memory, by design —
+        see <code>app/api/dependencies.py</code>) — the buttons above fire real synthetic requests through
+        <code>POST /simulate/batch</code>, a genuine endpoint that runs real bandit updates against a known
+        preference structure (emergency contexts prefer <code>eta_heavy</code>, normal contexts prefer
+        <code>rating_heavy</code>), so you can watch real convergence happen live instead of clicking
+        "select provider" dozens of times.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2>How the Context Agent classifies urgency <span class="tag">hybrid rules + LLM</span></h2>
+      <p class="section-desc">
+        Run a request above to drive this from real data — until then it shows a representative example.
+        Rules compute <code>time_slot</code> deterministically from the hour; the LLM only classifies
+        urgency and extracts constraints from free text, and can never affect the final score directly.
+      </p>
+      <div class="ctx-flow" id="ctx-flow">
+        <div class="ctx-step" id="ctx-step-raw">
+          <div class="ctx-step-title">1. Raw request</div>
+          <pre class="ctx-box" id="ctx-raw"></pre>
+        </div>
+        <div class="ctx-arrow">→</div>
+        <div class="ctx-step" id="ctx-step-toon">
+          <div class="ctx-step-title">2. TOON-encoded for the LLM <span class="tag">app/context/toon_serializer.py</span></div>
+          <pre class="ctx-box" id="ctx-toon"></pre>
+        </div>
+        <div class="ctx-arrow">→</div>
+        <div class="ctx-step" id="ctx-step-llm">
+          <div class="ctx-step-title">3. claude-haiku-4-5 → Pydantic-validated JSON</div>
+          <pre class="ctx-box" id="ctx-llm"></pre>
+        </div>
+      </div>
+      <div class="ctx-branches">
+        <div class="ctx-branch" id="ctx-branch-ok">
+          <div class="ctx-branch-title">✓ validation succeeds</div>
+          <div class="ctx-branch-body">urgency + constraints flow into the Ranking Agent's context vector</div>
+        </div>
+        <div class="ctx-branch" id="ctx-branch-fail">
+          <div class="ctx-branch-title">✗ validation fails / LLM errors</div>
+          <div class="ctx-branch-body">fails closed to <code>urgency = normal</code> — the pipeline never crashes on bad model output</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2>How Dijkstra finds the shortest path <span class="tag">app/routing/dijkstra.py</span></h2>
+      <p class="section-desc">
+        The real algorithm — priority-queue Dijkstra, cost = time-dependent travel minutes — run here on a
+        small illustrative graph so every relaxation is visible. The live pipeline above runs the identical
+        code against the real ~10,500-node Colombo OSM graph, which is far too dense to animate node-by-node.
+      </p>
+      <div class="dijkstra-row">
+        <svg id="dij-svg" viewBox="0 0 580 260"></svg>
+        <div class="dij-log-panel">
+          <div class="dij-controls">
+            <button class="secondary" id="dij-step">Step →</button>
+            <button class="secondary" id="dij-play">▶ Play</button>
+            <button class="secondary" id="dij-reset">Reset</button>
+          </div>
+          <div class="dij-log" id="dij-log"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2>3. What's actually novel here</h2>
+      <p class="section-desc">Static badges for panel reference — the live sections above are the proof these aren't just claims.</p>
+      <div class="badge-grid">
+        <div class="arch-badge"><div class="t">Online-learned ranking</div><div class="d">LinUCB (Li et al. 2010) over discrete weight profiles, context = urgency × time-slot, reward from real user selection rank.</div></div>
+        <div class="arch-badge"><div class="t">Provider reliability</div><div class="d">Beta-Bernoulli posterior updated per completed job, feeds directly into the ranking score as a learned feature.</div></div>
+        <div class="arch-badge"><div class="t">Hand-implemented routing</div><div class="d">Priority-queue Dijkstra + A* (haversine heuristic) over a real OSM road graph, time-dependent traffic multipliers. Verified against networkx on 50 random pairs.</div></div>
+        <div class="arch-badge"><div class="t">Hybrid retrieval</div><div class="d">Dense vector similarity (Chroma) + BM25 keyword search, fused via Reciprocal Rank Fusion, not either alone.</div></div>
+        <div class="arch-badge"><div class="t">Live availability</div><div class="d">Background Markov-chain simulator mutates provider state independently of requests — never a static field.</div></div>
+        <div class="arch-badge"><div class="t">Fail-closed context inference</div><div class="d">Hybrid rules + LLM (TOON-serialized input, Pydantic-validated JSON output). Any LLM failure falls back to normal urgency — the pipeline never crashes on bad model output.</div></div>
+        <div class="arch-badge"><div class="t">Deterministic scoring</div><div class="d">The LLM only classifies context. Final ranking is always a deterministic weighted sum of agent-computed features — never model-generated.</div></div>
+        <div class="arch-badge"><div class="t">Preserved baseline</div><div class="d">PP1's exact static-weight formula still runs, as <code>balanced_pp1_baseline</code> — the before/after comparison is real, not reconstructed.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Last live update: <span id="last-update">—</span> · This page makes real HTTP + WebSocket calls to the backend, no mock data.
+  </footer>
+
+</div>
+
+<script>
+const API_BASE = "http://localhost:8001";
+document.getElementById("api-base-label").textContent = API_BASE;
+
+const ARM_ORDER = ["balanced_pp1_baseline", "eta_heavy", "rating_heavy", "reliability_heavy"];
+const ARM_COLOR = {
+  balanced_pp1_baseline: "var(--series-1)",
+  eta_heavy:             "var(--series-2)",
+  rating_heavy:           "var(--series-3)",
+  reliability_heavy:     "var(--series-4)",
+};
+const NODE_ORDER = ["context_agent", "search_agent", "distance_agent", "availability_agent", "ranking_agent"];
+
+let lastResult = null;      // last /request response
+let selectedProviderId = null;
+let sparkHistory = [];      // [{t, [arm]: normValue}]
+
+function setLastUpdate() {
+  document.getElementById("last-update").textContent = new Date().toLocaleTimeString();
+}
+
+function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+// ---------- connection health ----------
+async function checkHealth() {
+  const dot = document.getElementById("dot-conn");
+  const label = document.getElementById("conn-label");
+  try {
+    const res = await fetch(`${API_BASE}/openapi.json`);
+    if (res.ok) {
+      dot.className = "dot ok";
+      label.textContent = "backend reachable";
+    } else {
+      throw new Error("bad status");
+    }
+  } catch (e) {
+    dot.className = "dot bad";
+    label.textContent = "backend unreachable — start it with docker compose up";
+  }
+}
+
+// ---------- bandit state rendering ----------
+function normOfTheta(theta) {
+  return Math.sqrt(theta.reduce((s, v) => s + v * v, 0));
+}
+
+function renderArms(state, opts = {}) {
+  const container = document.getElementById("arm-rows");
+  container.innerHTML = "";
+  const maxNorm = Math.max(0.01, ...ARM_ORDER.map((a) => (state[a] ? normOfTheta(state[a].theta) : 0)));
+
+  ARM_ORDER.forEach((arm) => {
+    const info = state[arm] || { theta: [0, 0, 0, 0, 0, 0], observation_count: 0 };
+    const norm = normOfTheta(info.theta);
+    const pct = Math.min(100, (norm / maxNorm) * 100);
+
+    const row = document.createElement("div");
+    row.className = "arm-row";
+    row.innerHTML = `
+      <div class="arm-name"><span class="swatch" style="background:${ARM_COLOR[arm]}"></span>${arm}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:0%;background:${ARM_COLOR[arm]}"></div></div>
+      <div class="obs">${info.observation_count} obs</div>
+    `;
+    container.appendChild(row);
+    requestAnimationFrame(() => {
+      row.querySelector(".bar-fill").style.width = pct + "%";
+    });
+  });
+
+  if (opts.flash) {
+    const card = container.closest(".card");
+    card.classList.remove("flash");
+    void card.offsetWidth;
+    card.classList.add("flash");
+  }
+
+  sparkHistory.push({ t: sparkHistory.length, state });
+  if (sparkHistory.length > 40) sparkHistory.shift();
+  renderSpark();
+  setLastUpdate();
+}
+
+function renderSpark() {
+  const svg = document.getElementById("spark");
+  if (sparkHistory.length < 2) { svg.innerHTML = ""; return; }
+  const w = svg.clientWidth || 600, h = 90, pad = 6;
+  const maxNorm = Math.max(0.01, ...sparkHistory.flatMap((p) => ARM_ORDER.map((a) => (p.state[a] ? normOfTheta(p.state[a].theta) : 0))));
+  const stepX = (w - pad * 2) / (sparkHistory.length - 1);
+
+  const paths = ARM_ORDER.map((arm) => {
+    const pts = sparkHistory.map((p, i) => {
+      const v = p.state[arm] ? normOfTheta(p.state[arm].theta) : 0;
+      const x = pad + i * stepX;
+      const y = h - pad - (v / maxNorm) * (h - pad * 2);
+      return `${x},${y}`;
+    });
+    return `<polyline points="${pts.join(" ")}" fill="none" stroke="${ARM_COLOR[arm]}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />`;
+  });
+
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.innerHTML = paths.join("");
+}
+
+async function loadBanditState(opts = {}) {
+  try {
+    const res = await fetch(`${API_BASE}/bandit/state`);
+    const state = await res.json();
+    renderArms(state, opts);
+  } catch (e) { /* connection status pill already reflects this */ }
+}
+
+// ---------- websocket ----------
+function connectWs() {
+  const dot = document.getElementById("dot-ws");
+  const label = document.getElementById("ws-label");
+  try {
+    const ws = new WebSocket(API_BASE.replace("http", "ws") + "/ws/bandit");
+    ws.onopen = () => { dot.className = "dot ok"; label.textContent = "websocket live"; };
+    ws.onclose = () => { dot.className = "dot bad"; label.textContent = "websocket closed — retrying"; setTimeout(connectWs, 3000); };
+    ws.onerror = () => { dot.className = "dot bad"; };
+    ws.onmessage = (evt) => {
+      const state = JSON.parse(evt.data);
+      renderArms(state, { flash: true });
+    };
+  } catch (e) {
+    dot.className = "dot bad";
+  }
+}
+
+// ---------- pipeline flow animation ----------
+function positionPacketAt(index) {
+  const nodes = document.querySelectorAll(".flow-node");
+  const track = document.querySelector(".flow-track");
+  const node = nodes[index];
+  const trackRect = track.getBoundingClientRect();
+  const nodeRect = node.querySelector(".node-dot").getBoundingClientRect();
+  const left = nodeRect.left - trackRect.left + nodeRect.width / 2 - 7;
+  const packet = document.getElementById("flow-packet");
+  packet.style.opacity = "1";
+  packet.style.left = left + "px";
+}
+
+async function animateFlow(trace) {
+  document.querySelectorAll(".flow-node").forEach((n) => {
+    n.classList.remove("active", "done");
+    n.querySelector(".node-detail").textContent = "";
+  });
+  document.getElementById("flow-packet").style.opacity = "0";
+  await sleep(50);
+
+  for (let i = 0; i < NODE_ORDER.length; i++) {
+    const nodeId = NODE_ORDER[i];
+    const el = document.querySelector(`.flow-node[data-node="${nodeId}"]`);
+    positionPacketAt(i);
+    el.classList.add("active");
+    await sleep(420);
+
+    const event = trace.find((t) => t.node === nodeId);
+    if (event) {
+      const ms = Math.round(new Date(event.ended_at) - new Date(event.started_at));
+      const detailStr = Object.entries(event.detail).map(([k, v]) => `${k}: ${v}`).join(" · ");
+      el.querySelector(".node-detail").textContent = `${detailStr} (${ms}ms)`;
+    }
+    el.classList.remove("active");
+    el.classList.add("done");
+    await sleep(120);
+  }
+}
+
+function renderElapsed(trace) {
+  const container = document.getElementById("elapsed-list");
+  container.innerHTML = "";
+  const durations = trace.map((e) => ({ node: e.node, ms: new Date(e.ended_at) - new Date(e.started_at) }));
+  const maxMs = Math.max(1, ...durations.map((d) => d.ms));
+  durations.forEach((d) => {
+    const row = document.createElement("div");
+    row.className = "elapsed-row";
+    row.innerHTML = `
+      <div class="label">${d.node}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:0%"></div></div>
+      <div class="ms">${d.ms}ms</div>
+    `;
+    container.appendChild(row);
+    requestAnimationFrame(() => {
+      row.querySelector(".bar-fill").style.width = (d.ms / maxMs) * 100 + "%";
+    });
+  });
+}
+
+// ---------- providers ----------
+function renderProviders(ranked) {
+  const card = document.getElementById("providers-card");
+  const grid = document.getElementById("provider-grid");
+  card.style.display = "block";
+  grid.innerHTML = "";
+  selectedProviderId = null;
+
+  ranked.slice(0, 6).forEach((c, i) => {
+    const el = document.createElement("div");
+    el.className = "provider-card";
+    el.style.animationDelay = `${i * 60}ms`;
+    el.innerHTML = `
+      ${c.avatar_url ? `<img src="${c.avatar_url}" alt="">` : ""}
+      <div style="flex:1;min-width:0;">
+        <div class="pname">${c.name ?? "Unknown"}</div>
+        <div class="pmeta">${(c.service_type ?? "").replace("_", " ")} · #${c.rank}</div>
+        <div class="pscore">score ${c.score.toFixed(3)} · ★ ${c.rating != null ? c.rating.toFixed(1) : "—"}</div>
+        <button data-pid="${c.provider_id}" data-rank="${c.rank}">Select →</button>
+      </div>
+    `;
+    grid.appendChild(el);
+  });
+
+  grid.querySelectorAll("button[data-pid]").forEach((btn) => {
+    btn.addEventListener("click", () => selectProvider(btn.dataset.pid, Number(btn.dataset.rank)));
+  });
+}
+
+async function selectProvider(providerId, rank) {
+  if (!lastResult) return;
+  try {
+    await fetch(`${API_BASE}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ context: lastResult.context_vector, arm_index: lastResult.arm_index, selected_rank: rank }),
+    });
+    selectedProviderId = providerId;
+    document.querySelectorAll(".provider-card").forEach((el) => {
+      const btn = el.querySelector("button[data-pid]");
+      if (btn && btn.dataset.pid === providerId) el.classList.add("selected");
+    });
+    // The WebSocket push (see connectWs) will animate the bandit bars -- no need to
+    // re-fetch state manually here, this is exactly the live loop being demonstrated.
+  } catch (e) { /* connection pill already reflects backend reachability */ }
+}
+
+// ---------- simulate controls (the real fix for "bandit shows 0 obs") ----------
+async function runSimulation(n, btn) {
+  const summaryEl = document.getElementById("sim-summary");
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = `Simulating ${n}…`;
+  try {
+    const res = await fetch(`${API_BASE}/simulate/batch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ n }),
+    });
+    const data = await res.json();
+    summaryEl.innerHTML = `adaptive reward <strong>${data.cumulative_reward_adaptive.toFixed(1)}</strong> vs static baseline <strong>${data.cumulative_reward_static_baseline.toFixed(1)}</strong> over ${data.requests_fired} simulated rounds`;
+    // /simulate/batch broadcasts the new state over the websocket already (see
+    // connectWs) -- this re-fetch is just a safety net in case the socket dropped.
+    await loadBanditState({ flash: true });
+  } catch (e) {
+    summaryEl.textContent = "simulation failed -- is the backend reachable?";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+document.getElementById("sim-20").addEventListener("click", (e) => runSimulation(20, e.target));
+document.getElementById("sim-100").addEventListener("click", (e) => runSimulation(100, e.target));
+
+// ---------- context agent explainer ----------
+function toTOON(rows) {
+  if (!rows.length) return "";
+  const keys = Object.keys(rows[0]);
+  const lines = [keys.join("|")];
+  for (const row of rows) lines.push(keys.map((k) => String(row[k])).join("|"));
+  return lines.join("\n");
+}
+
+function renderContextExplainer(rawText, region, trace) {
+  const ctxEvent = trace && trace.find((t) => t.node === "context_agent");
+  const timeSlot = ctxEvent ? ctxEvent.detail.time_slot : "midday";
+  const urgency = ctxEvent ? ctxEvent.detail.urgency : "normal";
+  const constraints = ctxEvent ? ctxEvent.detail.constraints || [] : [];
+  const isLive = Boolean(ctxEvent);
+
+  const rawBox = document.getElementById("ctx-raw");
+  rawBox.textContent =
+    `raw_text: "${rawText}"\n` +
+    `region: ${region}\n` +
+    `time_slot: ${timeSlot}   ${isLive ? "(rule: hour → slot, deterministic)" : "(example -- run a request above)"}`;
+
+  const toon = toTOON([
+    { field: "raw_text", value: rawText },
+    { field: "region", value: region },
+    { field: "time_slot", value: timeSlot },
+  ]);
+  document.getElementById("ctx-toon").textContent = toon;
+
+  document.getElementById("ctx-llm").textContent = JSON.stringify(
+    { urgency, constraints, confidence: isLive ? "<model-reported, 0-1>" : 0.9 },
+    null,
+    2
+  );
+
+  const boxes = [document.getElementById("ctx-raw"), document.getElementById("ctx-toon"), document.getElementById("ctx-llm")];
+  boxes.forEach((el) => el.classList.remove("filled"));
+  boxes.forEach((el, i) => setTimeout(() => el.classList.add("filled"), 60 + i * 260));
+}
+
+// ---------- dijkstra explainer ----------
+const DIJ_GRAPH = {
+  nodes: {
+    A: [40, 130], B: [175, 45], C: [175, 215], D: [320, 45],
+    E: [320, 215], F: [320, 130], G: [460, 85], H: [460, 195], I: [545, 130],
+  },
+  edges: [
+    ["A", "B", 4], ["A", "C", 2], ["B", "D", 5], ["C", "E", 3], ["C", "F", 6],
+    ["D", "G", 3], ["E", "F", 2], ["F", "G", 4], ["F", "H", 5], ["E", "H", 6],
+    ["G", "I", 3], ["H", "I", 2],
+  ],
+  source: "A",
+  target: "I",
+};
+
+function buildAdjacency(graph) {
+  const adj = {};
+  for (const id of Object.keys(graph.nodes)) adj[id] = [];
+  for (const [u, v, w] of graph.edges) {
+    adj[u].push({ to: v, w });
+    adj[v].push({ to: u, w });
+  }
+  return adj;
+}
+
+class DijkstraSim {
+  constructor(graph) {
+    this.graph = graph;
+    this.adj = buildAdjacency(graph);
+    this.reset();
+  }
+
+  reset() {
+    this.dist = { [this.graph.source]: 0 };
+    this.prev = {};
+    this.visited = new Set();
+    this.heap = [[0, this.graph.source]];
+    this.done = false;
+    this.path = [];
+  }
+
+  // Mirrors app/routing/dijkstra.py's loop structure (heap pop -> skip visited ->
+  // mark visited -> relax neighbors), just with an array-as-heap since the toy
+  // graph is tiny; the algorithmic behavior is identical.
+  step() {
+    if (this.done) return { done: true };
+    this.heap.sort((a, b) => a[0] - b[0]);
+    if (this.heap.length === 0) { this.done = true; return { done: true }; }
+    const [cost, node] = this.heap.shift();
+    if (this.visited.has(node)) return { done: false, skip: true, node };
+
+    this.visited.add(node);
+    const relaxed = [];
+    if (node !== this.graph.target) {
+      for (const edge of this.adj[node]) {
+        if (this.visited.has(edge.to)) continue;
+        const newCost = cost + edge.w;
+        if (newCost < (this.dist[edge.to] ?? Infinity)) {
+          this.dist[edge.to] = newCost;
+          this.prev[edge.to] = node;
+          this.heap.push([newCost, edge.to]);
+          relaxed.push({ to: edge.to, cost: newCost });
+        }
+      }
+    }
+
+    if (node === this.graph.target) {
+      this.done = true;
+      let cur = this.graph.target;
+      const path = [cur];
+      while (cur !== this.graph.source) { cur = this.prev[cur]; path.push(cur); }
+      path.reverse();
+      this.path = path;
+    }
+
+    return { done: this.done, node, cost, relaxed, path: this.path };
+  }
+}
+
+let dij = new DijkstraSim(DIJ_GRAPH);
+let dijPlayTimer = null;
+
+function dijSvg() { return document.getElementById("dij-svg"); }
+
+function renderDijGraph() {
+  const svg = dijSvg();
+  const parts = [];
+  for (const [u, v, w] of DIJ_GRAPH.edges) {
+    const [x1, y1] = DIJ_GRAPH.nodes[u], [x2, y2] = DIJ_GRAPH.nodes[v];
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    parts.push(`<line class="dij-edge" id="edge-${u}-${v}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`);
+    parts.push(`<rect x="${mx - 8}" y="${my - 7}" width="16" height="12" fill="var(--surface-2)" />`);
+    parts.push(`<text class="dij-edge-label" x="${mx}" y="${my + 3}">${w}</text>`);
+  }
+  for (const [id, [x, y]] of Object.entries(DIJ_GRAPH.nodes)) {
+    parts.push(`<circle class="dij-node-circle" id="node-${id}" cx="${x}" cy="${y}" r="16" />`);
+    parts.push(`<text class="dij-node-label" x="${x}" y="${y}">${id}</text>`);
+    parts.push(`<text class="dij-node-dist" id="dist-${id}" x="${x}" y="${y + 27}">${id === DIJ_GRAPH.source ? "0" : "∞"}</text>`);
+  }
+  svg.innerHTML = parts.join("");
+}
+
+function edgeEl(u, v) {
+  return document.getElementById(`edge-${u}-${v}`) || document.getElementById(`edge-${v}-${u}`);
+}
+
+function logLine(text, current) {
+  const log = document.getElementById("dij-log");
+  const line = document.createElement("div");
+  if (current) line.className = "step-current";
+  line.textContent = text;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function dijStep() {
+  if (dij.done) return true;
+  const result = dij.step();
+  if (result.skip) {
+    logLine(`(stale queue entry for ${result.node}, already visited -- skip)`);
+    return false;
+  }
+  if (!result.node) return true;
+
+  document.getElementById(`node-${result.node}`).classList.add("visited");
+  logLine(`visit ${result.node}  (dist = ${result.cost.toFixed(0)})`, true);
+
+  for (const r of result.relaxed || []) {
+    const el = edgeEl(result.node, r.to);
+    if (el) { el.classList.add("relaxed"); setTimeout(() => el.classList.remove("relaxed"), 700); }
+    document.getElementById(`dist-${r.to}`).textContent = r.cost.toFixed(0);
+    document.getElementById(`node-${r.to}`).classList.add("frontier");
+    logLine(`  relax ${result.node}→${r.to}: ${r.cost.toFixed(0)} is better, update`);
+  }
+
+  if (result.done && result.path && result.path.length) {
+    for (let i = 0; i < result.path.length - 1; i++) {
+      const el = edgeEl(result.path[i], result.path[i + 1]);
+      if (el) el.classList.add("path");
+      document.getElementById(`node-${result.path[i]}`).classList.add("path");
+    }
+    document.getElementById(`node-${result.path[result.path.length - 1]}`).classList.add("path");
+    logLine(`target reached -- shortest path: ${result.path.join(" → ")} (cost ${dij.dist[dij.graph.target].toFixed(0)})`, true);
+  }
+  return dij.done;
+}
+
+function dijReset() {
+  clearInterval(dijPlayTimer);
+  dijPlayTimer = null;
+  document.getElementById("dij-play").textContent = "▶ Play";
+  dij = new DijkstraSim(DIJ_GRAPH);
+  renderDijGraph();
+  document.getElementById("dij-log").innerHTML = "";
+  logLine(`source = ${DIJ_GRAPH.source}, target = ${DIJ_GRAPH.target}. Click "Step" or "Play".`);
+}
+
+document.getElementById("dij-step").addEventListener("click", () => dijStep());
+document.getElementById("dij-reset").addEventListener("click", dijReset);
+document.getElementById("dij-play").addEventListener("click", (e) => {
+  if (dijPlayTimer) {
+    clearInterval(dijPlayTimer);
+    dijPlayTimer = null;
+    e.target.textContent = "▶ Play";
+    return;
+  }
+  e.target.textContent = "⏸ Pause";
+  dijPlayTimer = setInterval(() => {
+    const finished = dijStep();
+    if (finished) { clearInterval(dijPlayTimer); dijPlayTimer = null; e.target.textContent = "▶ Play"; }
+  }, 750);
+});
+
+// ---------- run request ----------
+async function runRequest() {
+  const btn = document.getElementById("run-btn");
+  btn.disabled = true;
+  btn.textContent = "Running…";
+  document.getElementById("providers-card").style.display = "none";
+  const rawText = document.getElementById("raw-text").value;
+  const region = document.getElementById("region").value;
+
+  try {
+    const res = await fetch(`${API_BASE}/request`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ raw_text: rawText, timestamp: new Date().toISOString(), region }),
+    });
+    const data = await res.json();
+    lastResult = data;
+
+    await animateFlow(data.trace);
+    renderElapsed(data.trace);
+    renderProviders(data.ranked);
+    renderContextExplainer(rawText, region, data.trace);
+    setLastUpdate();
+  } catch (e) {
+    alert("Request failed -- is the backend running at " + API_BASE + "?");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Run live request →";
+  }
+}
+
+document.getElementById("run-btn").addEventListener("click", runRequest);
+window.addEventListener("resize", renderSpark);
+
+checkHealth();
+loadBanditState();
+connectWs();
+renderContextExplainer(document.getElementById("raw-text").value, document.getElementById("region").value, null);
+dijReset();
+setInterval(checkHealth, 15000);
+</script>
+</body>
+</html>

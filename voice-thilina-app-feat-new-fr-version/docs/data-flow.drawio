@@ -1,0 +1,151 @@
+<mxfile host="app.diagrams.net" agent="claude-code" version="24.7.5" type="device">
+  <diagram id="dispatch-data-flow" name="Data Flow">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2900" pageHeight="1960" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Dispatch Voice App — End-to-End Data Flow" style="text;html=1;fontSize=22;fontStyle=1;align=center;verticalAlign=middle;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="2900" height="34" as="geometry" />
+        </mxCell>
+
+        <!-- Lane headers -->
+        <mxCell id="lane1" value="1. FRONTEND — React / Next.js  (VoiceRecorder.tsx, Usechatsession.tsx, ChatHero.tsx, Classificationbadge.tsx, page.tsx)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;fontSize=16;fontStyle=1;spacingLeft=12;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="0" y="40" width="2900" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="lane2" value="2. BACKEND REST — routers/chats.py  (create Message, optimistic broadcast, queue background task)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;align=left;fontSize=16;fontStyle=1;spacingLeft=12;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="0" y="360" width="2900" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="lane3" value="3. AI SERVICES — Gemini transcribe / translate / vision  +  local sklearn classifiers (predict_service.py)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;align=left;fontSize=16;fontStyle=1;spacingLeft=12;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="0" y="580" width="2900" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="lane4" value="4. DISPATCH ORCHESTRATION — dispatch_service.py  (classification decision + bilingual EN/SI reply)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;verticalAlign=top;align=left;fontSize=16;fontStyle=1;spacingLeft=12;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="0" y="940" width="2900" height="800" as="geometry" />
+        </mxCell>
+        <mxCell id="lane5" value="5. DATA STORE &amp; WEBSOCKET BROADCAST — models.py  +  connection_manager.py" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;verticalAlign=top;align=left;fontSize=16;fontStyle=1;spacingLeft=12;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="0" y="1760" width="2900" height="180" as="geometry" />
+        </mxCell>
+
+        <!-- ===== LANE 1: FRONTEND ===== -->
+        <mxCell id="n_f0" value="page.tsx&#10;Pick / create case&#10;(listChats, createChat)&#10;→ activeChatId" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n_f1" value="VoiceRecorder.tsx&#10;User speaks, types, or&#10;attaches a photo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="320" y="110" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n_f2" value="useChatSession.tsx&#10;sendText / sendAudio / sendImage&#10;→ HTTP POST" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="600" y="110" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n_f3" value="useChatSession.tsx&#10;ws.onmessage:&#10;history / message / message_update&#10;→ setMessages()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="110" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_f4" value="VoiceRecorder.tsx&#10;Bubble renders:&#10;content (EN) + translation (SI)&#10;+ ClassificationBadge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2560" y="110" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_retry" value="If status=failed → Retry button&#10;re-sends same payload (retryRef)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;fontSize=10;fontStyle=2;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2560" y="225" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ===== LANE 2: BACKEND REST ===== -->
+        <mxCell id="n_b1" value="POST /api/chats/{id}/messages/&#10;{text|audio|image}&#10;create Message(status=processing)&#10;broadcast 'message' (optimistic)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="600" y="410" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n_b2" value="background_tasks.add_task(&#10;process_text/audio/image_message)&#10;returns {message_id}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="880" y="410" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ===== LANE 3: AI SERVICES ===== -->
+        <mxCell id="n_a_text" value="process_text_message()&#10;→ translate_text() [Gemini]&#10;returns (text, translation)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="880" y="650" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_a_audio" value="process_audio_message()&#10;→ transcribe_audio() [Gemini]&#10;returns (transcript, translation)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="650" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_a_image" value="process_image_message()&#10;→ analyze_image() [Gemini vision]&#10;returns {description,&#10;suggested_service_type}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="650" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_a2" value="Update user Message&#10;(translation / transcript set)&#10;broadcast 'message_update'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1720" y="650" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_d1" value="translation /&#10;description&#10;empty?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6b3;strokeColor=#d6b656;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2030" y="650" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="n_a4" value="On exception:&#10;status=failed, error=str(e)&#10;broadcast 'message_update'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="800" width="280" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ===== LANE 4: DISPATCH ORCHESTRATION ===== -->
+        <mxCell id="n_c1" value="build_case_context()&#10;(all user text in this chat so far)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2000" y="990" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n_a3" value="send_fallback_message()&#10;bilingual EN/SI&#10;'couldn't understand /&#10;analyze photo' reply" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="990" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n_c2" value="predict_service.predict()&#10;local sklearn classifiers:&#10;intent / service_type / urgency&#10;+ confidence scores" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2000" y="1110" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n_d2" value="confidence below&#10;threshold, or photo/&#10;text mismatch?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e6d0eb;strokeColor=#9673a6;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2030" y="1230" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="n_d3" value="rounds_used &lt;&#10;MAX_CLARIFICATION&#10;_ROUNDS (=1)?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e6d0eb;strokeColor=#9673a6;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1750" y="1380" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="n_c3" value="FALLBACK_REPLY_EN/SI&#10;'Got it — here's what I&#10;found…' (final answer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="1380" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n_c4" value="_build_clarifying_question()&#10;bilingual EN+SI template&#10;(service/urgency/intent/mismatch,&#10;tiered by round)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1720" y="1520" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_c5" value="assistant Message&#10;(content=EN, translation=SI,&#10;classification=JSON) built" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2000" y="1650" width="260" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ===== LANE 5: DATA STORE & BROADCAST ===== -->
+        <mxCell id="n_e1" value="db.add(Message)&#10;db.commit()  [SQLite]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2000" y="1810" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="n_e2" value="ConnectionManager.broadcast(&#10;chat_id, {type:'message', ...})&#10;→ every open WebSocket in the room" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2320" y="1810" width="280" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ===== EDGES ===== -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_f0" target="n_f1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_f1" target="n_f2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" value="HTTP POST" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_f2" target="n_b1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_b1" target="n_b2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" value="{message_id}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="n_b2" target="n_f2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6" value="'message' (optimistic,&#10;status=processing)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;" edge="1" parent="1" source="n_b1" target="n_f3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e7" value="text" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_b2" target="n_a_text"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e8" value="audio" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_b2" target="n_a_audio"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e9" value="image" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_b2" target="n_a_image"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_a_text" target="n_a2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_a_audio" target="n_a2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_a_image" target="n_a2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_a2" target="n_d1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e14" value="'message_update'" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;" edge="1" parent="1" source="n_a2" target="n_f3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e15" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_d1" target="n_a3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e16" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_d1" target="n_c1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e17" value="on exception" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" parent="1" source="n_a_text" target="n_a4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e18" value="on exception" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" parent="1" source="n_a_audio" target="n_a4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e19" value="on exception" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" parent="1" source="n_a_image" target="n_a4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e20" value="'message_update'&#10;(status=failed)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" parent="1" source="n_a4" target="n_f3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_c1" target="n_c2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_c2" target="n_d2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e23" value="No (confident)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_d2" target="n_c3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e24" value="Yes (unsure)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_d2" target="n_d3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e25" value="No (cap reached)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_d3" target="n_c3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e26" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_d3" target="n_c4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_c3" target="n_c5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_c4" target="n_c5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_a3" target="n_c5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_c5" target="n_e1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_e1" target="n_e2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e32" value="'message' (assistant reply)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;exitX=0.75;exitY=0;entryX=0.5;entryY=1;strokeColor=#2d7d46;fontColor=#2d7d46;" edge="1" parent="1" source="n_e2" target="n_f3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="n_f3" target="n_f4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e34" value="if needs_clarification:&#10;user answers again (same chat)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;strokeColor=#6c8ebf;fontColor=#6c8ebf;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="n_f4" target="n_f1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="2690" y="330" /><mxPoint x="440" y="330" /></Array></mxGeometry></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
