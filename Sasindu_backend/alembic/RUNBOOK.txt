@@ -1,0 +1,212 @@
+PROVIDER-MATCH — COMMAND RUNBOOK
+==========================================
+Backend + DB run in Docker (db already did; backend is now containerized too).
+Frontend runs locally, outside Docker.
+
+Project root: /Users/gimhanrajapaksha/Desktop/projects/employee
+Every command block below starts with its own `cd`, so blocks can be copy-pasted
+independently regardless of where your shell currently is.
+
+
+===========================================================
+A. BACKEND + DB (Docker) — PRIMARY WORKFLOW
+===========================================================
+Two services, defined in backend/docker-compose.yml:
+  - db      Postgres 16, host port 5434 -> container 5432
+  - backend FastAPI app, host port 8001 -> container 8000
+            built from backend/Dockerfile
+
+EXPOSED ENDPOINTS (on host machine once containers are up):
+  - REST API:              http://localhost:8001
+  - OpenAPI spec:          http://localhost:8001/openapi.json
+  - Request endpoint:      POST http://localhost:8001/request
+  - Feedback endpoint:     POST http://localhost:8001/feedback
+  - Bandit state:          GET http://localhost:8001/bandit/state
+  - Simulate batch:        POST http://localhost:8001/simulate/batch
+  - WebSocket (bandit):    ws://localhost:8001/ws/bandit
+  - Research dashboard:    http://localhost:3000/research-dashboard.html
+                           (or file:///path/to/frontend/public/research-dashboard.html)
+
+On every container start, docker-entrypoint.sh runs `app/scripts/bootstrap.py`
+BEFORE uvicorn starts. It is idempotent by design — each prerequisite checks
+live state first and skips itself if already satisfied:
+  - waits for the DB to accept connections
+  - runs `alembic upgrade head` (no-op if already at head)
+  - checks provider count == 150 -> reseeds (clearing first) only if not
+  - checks Chroma vector count matches provider count -> re-ingests only if not
+  - checks the OSM graph cache file exists -> fetches only if missing
+You do not need to run migrations/seed/ingest/graph-fetch separately — starting
+the containers is enough. On a fresh machine the first boot does real work
+(seed, embed, fetch OSM); on a machine that already has this state, it skips
+straight through and starts uvicorn in a few seconds.
+
+
+1. BUILD THE BACKEND IMAGE (first time, or after changing dependencies/code)
+--------------------------------------------------------------------------------
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+docker compose build backend
+
+
+2. START DB + BACKEND
+-------------------------
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+docker compose up -d
+
+# Same command works whether this is a fresh machine or a restart — the
+# bootstrap step figures out what still needs doing.
+
+
+3. VERIFY BOTH CONTAINERS ARE UP
+------------------------------------
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+docker compose ps
+
+# Or individually (works from anywhere, no cd needed):
+docker ps --filter "name=backend-db-1" --format '{{.Names}}\t{{.Status}}\t{{.Ports}}'
+docker ps --filter "name=backend-backend-1" --format '{{.Names}}\t{{.Status}}\t{{.Ports}}'
+
+
+4. WATCH BOOTSTRAP / STARTUP LOGS
+-------------------------------------
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+docker compose logs -f backend
+
+# Note: Python's stdout is block-buffered when not attached to a TTY, so
+# bootstrap's print() lines can appear delayed/batched in `docker logs`.
+# If you need to confirm state directly instead of waiting on log flush
+# (works from anywhere, no cd needed):
+docker exec backend-db-1 psql -U app -d provider_match -c "SELECT count(*) FROM providers;"
+
+
+5. HEALTH CHECK / SEND A LIVE REQUEST
+------------------------------------------
+# No cd needed — these just hit the port Docker exposed on the host.
+curl -s -o /dev/null -w "status: %{http_code}\n" http://127.0.0.1:8001/openapi.json
+
+# Valid region values: colombo-01, colombo-02, dehiwala, mount-lavinia, kotte
+curl -s -X POST http://127.0.0.1:8001/request \
+  -H "Content-Type: application/json" \
+  -d '{
+    "raw_text": "My kitchen sink pipe just burst and water is flooding the floor, I need someone right now!",
+    "timestamp": "2026-07-29T18:30:00",
+    "region": "colombo-01"
+  }' | python3 -m json.tool
+
+
+6. RESTART JUST THE BACKEND (e.g. after a code change + rebuild)
+----------------------------------------------------------------------
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+docker compose build backend
+docker compose up -d backend
+
+# Or for a quick restart with no image changes:
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+docker compose restart backend
+
+
+7. STOP EVERYTHING
+-----------------------
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+docker compose down          # keeps the pgdata / seeded-data volume
+docker compose down -v       # also wipes the Postgres volume (full reset)
+
+# data/graphs (OSM cache) and data/chroma (vector store) are bind-mounted
+# from backend/, so they survive `docker compose down` even without -v;
+# delete those folders manually if you want a truly clean slate:
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+rm -rf data/graphs data/chroma
+
+
+===========================================================
+B. FRONTEND (no Docker) — run locally
+===========================================================
+Package manager: pnpm
+Points at the backend via NEXT_PUBLIC_API_BASE in frontend/.env.local
+(already set to http://localhost:8001 to match the Docker backend's mapped port).
+
+CORS is configured in backend/app/api/main.py:
+  - allow_origin_regex: http://localhost(:\d+)? — allows Next.js on any localhost port
+  - allow_origins: ["null"] — allows file:// access (research-dashboard.html)
+This enables the browser-side frontend to call the backend API directly.
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/frontend
+pnpm install
+pnpm dev
+
+# Visit http://localhost:3000 (or the port Next.js falls back to if 3000 is busy)
+# Backend is at http://localhost:8001/openapi.json (OpenAPI spec)
+# WebSocket for real-time bandit updates: ws://localhost:8001/ws/bandit
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/frontend
+pnpm lint
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/frontend
+pnpm build
+
+
+===========================================================
+C. BACKEND WITHOUT DOCKER (manual, uv-based) — alternative
+===========================================================
+Use this if you want to run the backend directly on the host instead of in a
+container (e.g. for debugging with breakpoints). Requires `db` from section A
+still running in Docker (or any reachable Postgres on port 5434).
+Package manager: uv (prefix every python invocation with `uv run`)
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run alembic upgrade head
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run python -m app.scripts.seed_providers        # clears + reseeds every run
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run python -m app.scripts.ingest_embeddings      # clears + re-ingests every run
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run python -m app.availability.simulator          # optional, separate process
+
+# Port 8000 may already be bound by another local service — verify first:
+lsof -nP -iTCP:8000 -sTCP:LISTEN
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run uvicorn app.api.main:app --port 8001
+
+
+===========================================================
+D. TESTS, LINT, EVALUATION SUITE
+===========================================================
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run pytest tests/ -q
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run pytest tests/ -k "schema or context" -q     # run a subset
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run ruff check .
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run python -m evaluation.run_all --seed 42
+
+cd /Users/gimhanrajapaksha/Desktop/projects/employee/backend
+uv run python -m evaluation.experiments.exp1_adaptive_vs_static
+uv run python -m evaluation.experiments.exp2_routing_benchmark
+uv run python -m evaluation.experiments.exp3_retrieval_recall
+uv run python -m evaluation.experiments.exp4_toon_vs_json_tokens
+
+
+NOTES
+-------
+- ANTHROPIC_API_KEY must be set in backend/.env (gitignored) for the Context
+  Agent's LLM classification step to run — without it, ContextAgent fails
+  closed to urgency="normal" rather than crashing. docker-compose.yml passes
+  this through to the backend container via env_file.
+- Model is currently pinned to claude-haiku-4-5 in app/context/llm_client.py
+  (MODEL constant) — an explicit low-cost choice, not the skill's Opus-5 default.
+- SEED=42 in .env drives all reproducible seeding (providers, simulator RNG,
+  evaluation experiments).
+- backend/docker-compose.yml overrides DATABASE_URL for the backend container
+  to point at db:5432 (the in-network address) even though .env has
+  localhost:5434 (the host-side address for section C) — same .env file works
+  for both setups.
+- Seeding and embedding ingestion are now self-resetting: running the seed or
+  ingest script (directly, or via bootstrap) always clears existing rows/
+  vectors first, so re-running them can never accumulate duplicates.

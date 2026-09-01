@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: provider_match
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d provider_match"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: .
+    env_file:
+      - .env
+    environment:
+      # Overrides the .env value (which points at localhost:5434 for host-side dev)
+      # with the in-network address -- same .env file works for both setups.
+      DATABASE_URL: postgresql+asyncpg://app:app@db:5432/provider_match
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./data/graphs:/app/data/graphs
+      - ./data/chroma:/app/data/chroma
+      # sentence-transformers downloads its model from HuggingFace Hub on first use --
+      # without a persistent cache, every fresh container re-downloads it, which is slow
+      # and fails hard (corrupt partial download) on any network hiccup.
+      - hf_cache:/root/.cache/huggingface
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  hf_cache:
