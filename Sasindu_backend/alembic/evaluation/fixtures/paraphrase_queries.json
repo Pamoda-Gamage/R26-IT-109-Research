@@ -1,0 +1,152 @@
+[
+  {
+    "query": "my pipes are leaking and I need someone urgently",
+    "expected_provider_id": "2943a6b4-aae1-470d-bead-1d7374975e3a",
+    "service_type": "plumbing"
+  },
+  {
+    "query": "water is dripping under the sink, who can fix this",
+    "expected_provider_id": "e17667a8-c75e-4a01-8c7b-159be2244539",
+    "service_type": "plumbing"
+  },
+  {
+    "query": "toilet won't stop running, need a repair person",
+    "expected_provider_id": "22c408d9-c23c-49c2-aba5-b132dc7ea65c",
+    "service_type": "plumbing"
+  },
+  {
+    "query": "shower drain is completely blocked",
+    "expected_provider_id": "23a672ed-e501-4da7-b8a7-014bbb28b203",
+    "service_type": "plumbing"
+  },
+  {
+    "query": "there's a burst pipe flooding the kitchen floor",
+    "expected_provider_id": "c7243bd3-fb26-4e2b-ac3c-4f64b69724be",
+    "service_type": "plumbing"
+  },
+  {
+    "query": "power went out, need someone to check the wiring",
+    "expected_provider_id": "be40cbc9-a8a5-4020-93d9-19dd66403e09",
+    "service_type": "electrical"
+  },
+  {
+    "query": "sparks coming from my outlet, need an expert now",
+    "expected_provider_id": "02aecf9b-1ecf-449c-9ba7-01bd83cb0e59",
+    "service_type": "electrical"
+  },
+  {
+    "query": "lights keep flickering, who can take a look",
+    "expected_provider_id": "a31cc20c-4ce5-4dad-9263-c2cb4fb0f076",
+    "service_type": "electrical"
+  },
+  {
+    "query": "circuit breaker keeps tripping every night",
+    "expected_provider_id": "95ab05cd-d3b4-461c-8b02-3ab7c9adf931",
+    "service_type": "electrical"
+  },
+  {
+    "query": "need a new switch installed in the hallway",
+    "expected_provider_id": "55756902-4d5d-4617-ae5c-52e3d824a220",
+    "service_type": "electrical"
+  },
+  {
+    "query": "my fridge stopped cooling, need it fixed",
+    "expected_provider_id": "ec3d0449-592c-4aae-a0d2-a7a257997535",
+    "service_type": "appliance_repair"
+  },
+  {
+    "query": "washing machine is making a loud noise and won't spin",
+    "expected_provider_id": "798437cc-b1cf-439e-8c55-9a63a33559fa",
+    "service_type": "appliance_repair"
+  },
+  {
+    "query": "oven won't heat up anymore, need a technician",
+    "expected_provider_id": "dac5ad5a-2a50-4719-abf1-a115ea6ccd40",
+    "service_type": "appliance_repair"
+  },
+  {
+    "query": "dishwasher is leaking water onto the floor",
+    "expected_provider_id": "192cf381-4454-4077-ac99-c719d0e8468f",
+    "service_type": "appliance_repair"
+  },
+  {
+    "query": "microwave stopped turning on suddenly",
+    "expected_provider_id": "9276b0f3-ec8e-4ae0-83d0-87a99ac39011",
+    "service_type": "appliance_repair"
+  },
+  {
+    "query": "need someone to tidy up my house this week",
+    "expected_provider_id": "d2e393e3-8589-45c9-96a1-43023d10eb3c",
+    "service_type": "cleaning"
+  },
+  {
+    "query": "looking for a deep clean before guests arrive",
+    "expected_provider_id": "9eeee44d-5400-4b90-be2a-fdbd86a55e47",
+    "service_type": "cleaning"
+  },
+  {
+    "query": "who can help scrub the place from top to bottom",
+    "expected_provider_id": "b41c4bb6-3811-4f1b-b38d-36f49c30bab6",
+    "service_type": "cleaning"
+  },
+  {
+    "query": "carpets need a thorough wash, any recommendations",
+    "expected_provider_id": "a2707fcc-fc41-4f45-8b97-66f0e1035703",
+    "service_type": "cleaning"
+  },
+  {
+    "query": "moving out soon and need the apartment spotless",
+    "expected_provider_id": "80015f89-e7f2-4832-a1de-f43c55e8aab6",
+    "service_type": "cleaning"
+  },
+  {
+    "query": "there are ants all over my kitchen, need help",
+    "expected_provider_id": "cefc0d8a-4771-47e8-885f-3b41d62b5570",
+    "service_type": "pest_control"
+  },
+  {
+    "query": "found termites near the wall, who can treat this",
+    "expected_provider_id": "99f2a197-c544-4727-a660-beecd340f8b8",
+    "service_type": "pest_control"
+  },
+  {
+    "query": "mice keep getting into the house, need an exterminator",
+    "expected_provider_id": "667a859e-3582-40e6-872c-c53a600c78f7",
+    "service_type": "pest_control"
+  },
+  {
+    "query": "cockroaches everywhere in the bathroom",
+    "expected_provider_id": "efcf7a83-9ebc-4b47-ae01-7c11b58e1eaa",
+    "service_type": "pest_control"
+  },
+  {
+    "query": "need someone to spray for mosquitoes in the yard",
+    "expected_provider_id": "c20611fa-5b4f-4a4e-8d09-f5dd62a6a097",
+    "service_type": "pest_control"
+  },
+  {
+    "query": "locked myself out of the house",
+    "expected_provider_id": "5e686575-0f91-44b3-bc6c-ca1d8de9635e",
+    "service_type": "locksmith"
+  },
+  {
+    "query": "key broke off inside the front door lock",
+    "expected_provider_id": "2e9a0530-aab3-46ea-bf61-6f5c6e71b4c0",
+    "service_type": "locksmith"
+  },
+  {
+    "query": "need the locks changed after losing my keys",
+    "expected_provider_id": "37f9d228-6915-436b-8f1b-f59d192b99fc",
+    "service_type": "locksmith"
+  },
+  {
+    "query": "car key stuck and won't turn in the ignition",
+    "expected_provider_id": "9adc5105-c462-47cc-9c06-a92b5f37d2fa",
+    "service_type": "locksmith"
+  },
+  {
+    "query": "want a new safe installed with a combination lock",
+    "expected_provider_id": "d08112cc-48df-460f-af9b-006495d779ed",
+    "service_type": "locksmith"
+  }
+]
